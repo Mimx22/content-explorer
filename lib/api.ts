@@ -104,3 +104,12 @@ export async function searchProducts(query: string) {
 export async function getCategories() {
   return fetchAPI('/products/categories');
 }
+
+/**
+ * Fetch products by a specific category.
+ * 
+ * @param category - The category slug
+ */
+export async function getProductsByCategory(category: string) {
+  return fetchAPI(`/products/category/${category}`);
+}

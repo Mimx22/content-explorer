@@ -1,6 +1,11 @@
-import { getProducts } from '@/lib/api';
+import { getProducts, searchProducts, getProductsByCategory } from '@/lib/api';
 import { ProductsResponse } from '@/types/product';
 import ProductCard from './ProductCard';
+
+interface ProductGridProps {
+  query?: string;
+  category?: string;
+}
 
 /**
  * ProductGrid Component
@@ -15,11 +20,26 @@ import ProductCard from './ProductCard';
  * typically handled seamlessly by wrapping the component in <Suspense> or using a loading.tsx file 
  * at the route level.
  */
-export default async function ProductGrid() {
+export default async function ProductGrid({ query = '', category = '' }: ProductGridProps) {
   try {
-    // Fetch data directly on the server.
-    // We limit the fetch to 20 products as requested to ensure a fast initial payload.
-    const data = await getProducts(20, 0) as ProductsResponse;
+    let data: ProductsResponse;
+
+    // We determine which API function to call based on the active filters
+    if (query) {
+      data = (await searchProducts(query)) as ProductsResponse;
+      // DummyJSON's search endpoint doesn't natively filter by category
+      // So if both a query and category exist, we filter the query results in-memory
+      if (category && data.products) {
+        data.products = data.products.filter(p => p.category === category);
+      }
+    } else if (category) {
+      // If only a category is selected, use the category-specific endpoint
+      data = (await getProductsByCategory(category)) as ProductsResponse;
+    } else {
+      // Default: fetch the first 20 products
+      data = (await getProducts(20, 0)) as ProductsResponse;
+    }
+
     const products = data?.products;
 
     // Handle the empty/zero-results state gracefully so the UI remains polished.
@@ -31,15 +51,13 @@ export default async function ProductGrid() {
           </svg>
           <h3 className="text-lg font-semibold text-gray-900 mb-1">No products found</h3>
           <p className="text-gray-500 text-sm text-center max-w-sm">
-            We couldn't find any products right now. Please check back later.
+            We couldn't find any products matching your filters. Try adjusting your search!
           </p>
         </div>
       );
     }
 
     // Using Tailwind CSS Grid for a fully responsive layout.
-    // It cascades out: 1 column (mobile) -> 2 columns (small screens) -> 3 columns (medium) -> 4 columns (large)
-    // The generous gap (gap-6 or gap-8) gives the cards room to strictly breathe without margin collapsing.
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
         {products.map((product) => (
