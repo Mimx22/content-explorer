@@ -66,3 +66,33 @@ export default async function ProductGrid() {
     );
   }
 }
+
+/**
+ * ProductGridSkeleton
+ * 
+ * Reusable skeleton loader that matches the exact structure of the ProductGrid.
+ * Displayed instantly using React Suspense while the server is fetching data,
+ * massively improving perceived performance (UX).
+ */
+export function ProductGridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm h-[380px]">
+          {/* Image Skeleton */}
+          <div className="w-full aspect-square bg-gray-100 animate-pulse" />
+          
+          {/* Content Skeleton */}
+          <div className="p-5 flex flex-col flex-grow">
+            <div className="h-5 bg-gray-200 rounded w-3/4 animate-pulse mb-3" />
+            <div className="h-4 bg-gray-200 rounded w-12 animate-pulse mb-auto" />
+            <div className="mt-auto pt-4 flex justify-between items-center">
+              <div className="h-6 bg-gray-200 rounded w-16 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-20 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
