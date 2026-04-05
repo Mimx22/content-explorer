@@ -89,10 +89,12 @@ export async function getProductById(id: number) {
  * to safely handle spaces and special characters.
  *
  * @param query - The user search string
+ * @param limit - Number of elements to return
+ * @param skip - Number of elements to skip
  */
-export async function searchProducts(query: string) {
+export async function searchProducts(query: string, limit: number = 20, skip: number = 0) {
   const encodedQuery = encodeURIComponent(query);
-  return fetchAPI(`/products/search?q=${encodedQuery}`);
+  return fetchAPI(`/products/search?q=${encodedQuery}&limit=${limit}&skip=${skip}`);
 }
 
 /**
@@ -109,7 +111,9 @@ export async function getCategories() {
  * Fetch products by a specific category.
  * 
  * @param category - The category slug
+ * @param limit - Number of elements to return
+ * @param skip - Number of elements to skip
  */
-export async function getProductsByCategory(category: string) {
-  return fetchAPI(`/products/category/${category}`);
+export async function getProductsByCategory(category: string, limit: number = 20, skip: number = 0) {
+  return fetchAPI(`/products/category/${category}?limit=${limit}&skip=${skip}`);
 }

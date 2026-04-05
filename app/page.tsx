@@ -13,15 +13,16 @@ export default async function HomePage({
   // Await searchParams in Next.js 15+ if needed, but in 14 it's sync. Assuming sync based on version.
   const query = searchParams?.q || '';
   const category = searchParams?.category || '';
+  const page = parseInt(searchParams?.page || '1', 10);
 
   // Fetch categories directly on the server to pass to our FilterSelect component.
   // This avoids a wasteful client-side fetch on page load.
   const categories = (await getCategories()) as Category[];
 
-  // By combining query and category, we force React Suspense to trigger 
-  // its fallback *every time* the user executes a new search/filter,
+  // By combining query, category, and page, we force React Suspense to trigger 
+  // its fallback *every time* the user executes a new search/filter/pagination,
   // providing vital visual feedback instead of freezing the UI.
-  const suspenseKey = `${query}-${category}`;
+  const suspenseKey = `${query}-${category}-${page}`;
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -49,7 +50,7 @@ export default async function HomePage({
       */}
       <Suspense key={suspenseKey} fallback={<ProductGridSkeleton />}>
         {/* @ts-expect-error Async Server Component */}
-        <ProductGrid query={query} category={category} />
+        <ProductGrid query={query} category={category} page={page} />
       </Suspense>
     </main>
   );

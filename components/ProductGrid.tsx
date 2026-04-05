@@ -1,10 +1,12 @@
 import { getProducts, searchProducts, getProductsByCategory } from '@/lib/api';
 import { ProductsResponse } from '@/types/product';
 import ProductCard from './ProductCard';
+import Pagination from './Pagination';
 
 interface ProductGridProps {
   query?: string;
   category?: string;
+  page?: number;
 }
 
 /**
@@ -20,27 +22,31 @@ interface ProductGridProps {
  * typically handled seamlessly by wrapping the component in <Suspense> or using a loading.tsx file 
  * at the route level.
  */
-export default async function ProductGrid({ query = '', category = '' }: ProductGridProps) {
+export default async function ProductGrid({ query = '', category = '', page = 1 }: ProductGridProps) {
   try {
     let data: ProductsResponse;
+    const limit = 20;
+    const skip = Math.max(0, (page - 1) * limit);
 
     // We determine which API function to call based on the active filters
     if (query) {
-      data = (await searchProducts(query)) as ProductsResponse;
+      data = (await searchProducts(query, limit, skip)) as ProductsResponse;
       // DummyJSON's search endpoint doesn't natively filter by category
       // So if both a query and category exist, we filter the query results in-memory
       if (category && data.products) {
+        // Note: For large production systems, this mixed filtering should be handled natively by the backend DB
         data.products = data.products.filter(p => p.category === category);
       }
     } else if (category) {
       // If only a category is selected, use the category-specific endpoint
-      data = (await getProductsByCategory(category)) as ProductsResponse;
+      data = (await getProductsByCategory(category, limit, skip)) as ProductsResponse;
     } else {
-      // Default: fetch the first 20 products
-      data = (await getProducts(20, 0)) as ProductsResponse;
+      // Default: fetch paginated products
+      data = (await getProducts(limit, skip)) as ProductsResponse;
     }
 
     const products = data?.products;
+    const totalPages = Math.ceil((data?.total || 0) / limit);
 
     // Handle the empty/zero-results state gracefully so the UI remains polished.
     if (!products || products.length === 0) {
@@ -59,10 +65,15 @@ export default async function ProductGrid({ query = '', category = '' }: Product
 
     // Using Tailwind CSS Grid for a fully responsive layout.
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+      <div className="pb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+        
+        {/* Render pagination if needed */}
+        <Pagination totalPages={totalPages} currentPage={page} />
       </div>
     );
 
