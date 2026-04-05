@@ -8,12 +8,12 @@ export default async function HomePage({
   searchParams,
 }: {
   // searchParams in a server component is an object representing URL query string parameters
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-  // Await searchParams in Next.js 15+ if needed, but in 14 it's sync. Assuming sync based on version.
-  const query = searchParams?.q || '';
-  const category = searchParams?.category || '';
-  const page = parseInt(searchParams?.page || '1', 10);
+  const params = await searchParams;
+  const query = params?.q || '';
+  const category = params?.category || '';
+  const page = parseInt(params?.page || '1', 10);
 
   // Fetch categories directly on the server to pass to our FilterSelect component.
   // This avoids a wasteful client-side fetch on page load.
@@ -49,7 +49,6 @@ export default async function HomePage({
         streams down the fallback (our skeletons). 
       */}
       <Suspense key={suspenseKey} fallback={<ProductGridSkeleton />}>
-        {/* @ts-expect-error Async Server Component */}
         <ProductGrid query={query} category={category} page={page} />
       </Suspense>
     </main>

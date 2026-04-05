@@ -8,7 +8,7 @@ import Link from 'next/link';
 // description, and openGraph image per-product ensures rich link previews on social media.
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product: Product = await getProductById(parseInt(id, 10));
+  const product = (await getProductById(parseInt(id, 10))) as Product;
   
   return {
     title: `${product.title} | Content Explorer`,
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
  */
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product: Product = await getProductById(parseInt(id, 10));
+  const product = (await getProductById(parseInt(id, 10))) as Product;
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
