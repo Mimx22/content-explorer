@@ -1,3 +1,68 @@
-export default function ProductGrid() {
-  return <div>{/* ProductGrid implementation coming soon */}</div>;
+import { getProducts } from '@/lib/api';
+import { ProductsResponse } from '@/types/product';
+import ProductCard from './ProductCard';
+
+/**
+ * ProductGrid Component
+ * 
+ * WHY SERVER-SIDE FETCHING?
+ * This is an Async Server Component. By fetching data on the server instead of the client:
+ * 1. Performance: We ship zero JavaScript to the client for the fetching logic.
+ * 2. Speed: The API request executes rapidly from the Next.js backend, reducing latency.
+ * 3. SEO: Search engines receive fully populated HTML, making the products perfectly indexable.
+ * 
+ * Note on Loading States: In Next.js App Router, loading states for server components are 
+ * typically handled seamlessly by wrapping the component in <Suspense> or using a loading.tsx file 
+ * at the route level.
+ */
+export default async function ProductGrid() {
+  try {
+    // Fetch data directly on the server.
+    // We limit the fetch to 20 products as requested to ensure a fast initial payload.
+    const data = await getProducts(20, 0) as ProductsResponse;
+    const products = data?.products;
+
+    // Handle the empty/zero-results state gracefully so the UI remains polished.
+    if (!products || products.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 px-4 bg-gray-50 rounded-3xl border border-gray-100">
+          <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">No products found</h3>
+          <p className="text-gray-500 text-sm text-center max-w-sm">
+            We couldn't find any products right now. Please check back later.
+          </p>
+        </div>
+      );
+    }
+
+    // Using Tailwind CSS Grid for a fully responsive layout.
+    // It cascades out: 1 column (mobile) -> 2 columns (small screens) -> 3 columns (medium) -> 4 columns (large)
+    // The generous gap (gap-6 or gap-8) gives the cards room to strictly breathe without margin collapsing.
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    );
+
+  } catch (error) {
+    // Error Boundary: If the API fails or there's a network issue, we catch it locally.
+    // This isolates the failure so the header, footer, and rest of the page don't crash.
+    console.error('Error fetching products inside ProductGrid:', error);
+    
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4 bg-red-50 rounded-3xl border border-red-100">
+        <svg className="w-12 h-12 text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <h3 className="text-lg font-bold text-red-800 mb-2">Failed to load products</h3>
+        <p className="text-red-600 text-sm opacity-90 text-center max-w-sm">
+          There was an issue connecting to our servers. Please refresh the page to try again.
+        </p>
+      </div>
+    );
+  }
 }
